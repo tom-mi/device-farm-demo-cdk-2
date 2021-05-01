@@ -4,6 +4,7 @@ import { CodeBuildAction, S3SourceAction } from '@aws-cdk/aws-codepipeline-actio
 import { Bucket } from '@aws-cdk/aws-s3';
 import { ComputeType, LinuxBuildImage, PipelineProject } from '@aws-cdk/aws-codebuild';
 import { DeviceFarmAction } from './device-farm-action';
+import { Effect, PolicyStatement } from '@aws-cdk/aws-iam';
 
 interface PipelineStackProps {
   projectCustomResourceServiceToken: string
@@ -84,6 +85,19 @@ export class PipelineStack extends Stack {
         testType: 'Instrumentation',
       })],
     });
+
+    pipeline.addToRolePolicy(new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'devicefarm:CreateUpload',
+        'devicefarm:GetRun',
+        'devicefarm:GetUpload',
+        'devicefarm:ListDevicePools',
+        'devicefarm:ListProjects',
+        'devicefarm:ScheduleRun',
+      ],
+      resources: ['*'],
+    }));
 
     new CfnOutput(this, 'SourceBucket', {
       value: source.bucketName,
