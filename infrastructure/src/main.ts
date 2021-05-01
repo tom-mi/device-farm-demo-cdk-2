@@ -1,22 +1,13 @@
-import { App, Construct, Stack, StackProps } from '@aws-cdk/core';
-
-export class MyStack extends Stack {
-  constructor(scope: Construct, id: string, props: StackProps = {}) {
-    super(scope, id, props);
-
-    // define resources here...
-  }
-}
-
-// for development, use account/region from cdk cli
-const devEnv = {
-  account: process.env.CDK_DEFAULT_ACCOUNT,
-  region: process.env.CDK_DEFAULT_REGION,
-};
+import { App } from '@aws-cdk/core';
+import { DeviceFarmResources } from './device-farm-resources';
+import { PipelineStack } from './pipeline';
 
 const app = new App();
-
-new MyStack(app, 'my-stack-dev', { env: devEnv });
-// new MyStack(app, 'my-stack-prod', { env: prodEnv });
+const prefix = process.env.PREFIX || ''
+const resources = new DeviceFarmResources(app, `${prefix}device-farm-demo-cdk-resources`)
+new PipelineStack(app, `${prefix}device-farm-demo-cdk-pipeline`, {
+  projectCustomResourceServiceToken: resources.projectCustomResourceServiceToken,
+  devicePoolCustomResourceServiceToken: resources.devicePoolCustomResourceServiceToken,
+})
 
 app.synth();

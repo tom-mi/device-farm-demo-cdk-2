@@ -7,6 +7,15 @@ const project = new AwsCdkTypeScriptApp({
   /* AwsCdkTypeScriptAppOptions */
   // appEntrypoint: 'main.ts',                                                 /* The CDK app's entrypoint (relative to the source directory, which is "src" by default). */
   // cdkDependencies: undefined,                                               /* Which AWS CDK modules (those that start with "@aws-cdk/") this app uses. */
+  cdkDependencies: [
+      '@aws-cdk/aws-codebuild',
+      '@aws-cdk/aws-codepipeline',
+      '@aws-cdk/aws-codepipeline-actions',
+      '@aws-cdk/aws-lambda',
+      '@aws-cdk/aws-iam',
+      '@aws-cdk/aws-s3',
+      '@aws-cdk/custom-resources',
+  ]
   // cdkVersionPinning: false,                                                 /* Use pinned version instead of caret version for CDK. */
   // context: undefined,                                                       /* Additional context to include in `cdk.json`. */
   // requireApproval: CdkApprovalLevel.BROADENING,                             /* To protect you against unintended changes that affect your security posture, the AWS CDK Toolkit prompts you to approve security-related changes before deploying them. */
