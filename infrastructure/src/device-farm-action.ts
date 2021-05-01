@@ -2,6 +2,7 @@ import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import { Action } from '@aws-cdk/aws-codepipeline-actions';
 import { ActionArtifactBounds, ActionBindOptions, ActionCategory, ActionConfig, IStage } from '@aws-cdk/aws-codepipeline';
 import { Construct } from '@aws-cdk/core';
+import { Effect, PolicyStatement } from '@aws-cdk/aws-iam';
 
 interface DeviceFarmActionProps {
   actionName: string,
@@ -41,7 +42,20 @@ export class DeviceFarmAction extends Action {
     this.props = props;
   }
 
-  protected bound(_scope: Construct, _stage: IStage, _options: ActionBindOptions): ActionConfig {
+  protected bound(_scope: Construct, _stage: IStage, options: ActionBindOptions): ActionConfig {
+    options.role.addToPrincipalPolicy(new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'devicefarm:CreateUpload',
+        'devicefarm:GetRun',
+        'devicefarm:GetUpload',
+        'devicefarm:ListDevicePools',
+        'devicefarm:ListProjects',
+        'devicefarm:ScheduleRun',
+      ],
+      resources: ['*'],
+    }));
+    options.bucket.grantRead(options.role)
     return {
       configuration: {
         RecordAppPerformanceData: this.props.recordAppPerformanceData,
