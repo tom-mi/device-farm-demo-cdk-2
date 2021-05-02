@@ -1,36 +1,54 @@
-import { CfnOutput, Construct, CustomResource, RemovalPolicy, Stack, StackProps } from '@aws-cdk/core';
+import { CfnOutput, Construct, Fn, RemovalPolicy, Stack, StackProps } from '@aws-cdk/core';
 import { Artifact, Pipeline } from '@aws-cdk/aws-codepipeline';
 import { CodeBuildAction, S3SourceAction } from '@aws-cdk/aws-codepipeline-actions';
 import { Bucket } from '@aws-cdk/aws-s3';
 import { ComputeType, LinuxBuildImage, PipelineProject } from '@aws-cdk/aws-codebuild';
+import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId, PhysicalResourceIdReference } from '@aws-cdk/custom-resources';
 import { DeviceFarmAction } from './device-farm-action';
 
-interface PipelineStackProps {
-  projectCustomResourceServiceToken: string
-  devicePoolCustomResourceServiceToken: string
-}
-
 export class PipelineStack extends Stack {
-  constructor(scope: Construct, id: string, props: StackProps & PipelineStackProps) {
+  constructor(scope: Construct, id: string, props: StackProps) {
     super(scope, id, props);
 
     // define resources here...
-    const project = new CustomResource(this, 'DeviceFarmProject', {
-      serviceToken: props.projectCustomResourceServiceToken,
-      properties: {
-        ProjectName: 'device-farm-demo',
+    const project = new AwsCustomResource(this, 'DeviceFarmProject', {
+      policy: AwsCustomResourcePolicy.fromSdkCalls({ resources: AwsCustomResourcePolicy.ANY_RESOURCE }),
+      onCreate: {
+        service: 'DeviceFarm',
+        action: 'createProject',
+        region: 'us-west-2',
+        parameters: { name: 'device-farm-demo-2' },
+        physicalResourceId: PhysicalResourceId.fromResponse('project.arn'),
+      },
+      onDelete: {
+        service: 'DeviceFarm',
+        action: 'deleteProject',
+        region: 'us-west-2',
+        parameters: { arn: new PhysicalResourceIdReference() },
       },
     });
-    const devicePool = new CustomResource(this, 'DeviceFarmPool', {
-      serviceToken: props.devicePoolCustomResourceServiceToken,
-      properties: {
-        ProjectArn: project.getAttString('Arn'),
-        Name: 'device-farm-demo-pool',
-        Rules: [{
-          attribute: 'MODEL',
-          operator: 'EQUALS',
-          value: '"Google Pixel 2"',
-        }],
+    const devicePool = new AwsCustomResource(this, 'DeviceFarmPool', {
+      policy: AwsCustomResourcePolicy.fromSdkCalls({ resources: AwsCustomResourcePolicy.ANY_RESOURCE }),
+      onCreate: {
+        service: 'DeviceFarm',
+        action: 'createDevicePool',
+        region: 'us-west-2',
+        parameters: {
+          name: 'device-farm-demo-pool-2',
+          projectArn: project.getResponseField('project.arn'),
+          rules: [{
+            attribute: 'MODEL',
+            operator: 'EQUALS',
+            value: '"Google Pixel 2"',
+          }],
+        },
+        physicalResourceId: PhysicalResourceId.fromResponse('devicePool.arn'),
+      },
+      onDelete: {
+        service: 'DeviceFarm',
+        action: 'deleteDevicePool',
+        region: 'us-west-2',
+        parameters: { arn: new PhysicalResourceIdReference() },
       },
     });
 
@@ -72,8 +90,8 @@ export class PipelineStack extends Stack {
         inputs: [buildArtifact],
         app: 'app-release-unsigned.apk',
         appType: 'Android',
-        devicePoolArn: devicePool.getAttString('Arn'),
-        projectId: project.getAttString('ProjectId'),
+        devicePoolArn: devicePool.getResponseField('devicePool.arn'),
+        projectId: Fn.select(6, Fn.split(':', project.getResponseField('project.arn'))),
         radioBluetoothEnabled: true,
         radioGpsEnabled: true,
         radioNfcEnabled: true,

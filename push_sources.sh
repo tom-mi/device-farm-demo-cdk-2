@@ -9,7 +9,7 @@ fi
 echo "Packaging sources"
 zip --quiet --exclude 'app/build/*' -r sources.zip app gradlew gradle build.gradle settings.gradle gradle.properties buildspec.yaml
 
-pipeline_stack_name="${PREFIX}device-farm-demo-cdk-pipeline"
+pipeline_stack_name="${PREFIX}device-farm-demo-cdk-2-pipeline"
 source_bucket=$(aws cloudformation describe-stacks \
     --output text \
     --stack-name ${pipeline_stack_name} \
