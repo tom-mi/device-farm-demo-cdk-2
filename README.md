@@ -1,5 +1,10 @@
 # device-farm-demo-cdk
 
+Demo containing
+* lambda backed custom resources to create AWS Device farm projects & device pools implemented with the [Provider Framework](https://docs.aws.amazon.com/cdk/api/latest/docs/custom-resources-readme.html#provider-framework)
+* pipeline building & running a Device Farm example eproject
+* infrastructure deployed via CDK
+
 ## Deploy pipeline & custom resources
 
 ```
